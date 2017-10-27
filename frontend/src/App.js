@@ -8,10 +8,11 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      endpoint: "http://localhost:1111",
       contact: 0,
       width: 360,
-      height: 640
+      height: 640,
+      x: 1,
+      y: 1
     }
     // 1440 x 2560 - 360 x 640
 
@@ -19,6 +20,11 @@ class App extends Component {
     this.handleData = this.handleData.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+  }
+
+  handleOpen() {
+    console.log('onopen', arguments);
   }
 
   handleClose() {
@@ -55,24 +61,35 @@ class App extends Component {
     })
   }
 
-  handleOpen() {
-    console.log('onopen', arguments);
-  }
-
   handleMouseDown(event) {
     const rect = this.refs.canvas.getBoundingClientRect()
-    // const { socket } = this.state;
 
-    console.log((event.clientX - rect.x) + ", " + (event.clientY - rect.y));
+    const mouseX = event.clientX - rect.x;
+    const mouseY = event.clientY - rect.y;
+    console.log(`mouseDown: ${mouseX}, ${mouseY}`);
+    this.setState({
+      x: mouseX,
+      y: mouseY
+    })
+  }
+
+  handleMouseUp(event) {
+    const rect = this.refs.canvas.getBoundingClientRect()
+
+    const mouseX = event.clientX - rect.x;
+    const mouseY = event.clientY - rect.y;
+    console.log(`mouseUp: ${mouseX}, ${mouseY}`);
+
     axios.post("http://localhost:9002/", {
-      x: (event.clientX - rect.x) * 4 - 1,
-      y: (event.clientY - rect.y) * 4 - 1
+      x1: this.state.x * 4 - 1,
+      y1: this.state.y * 4 - 1,
+      x2: mouseX * 4 - 1,
+      y2: mouseY * 4 - 1
     }).then((response) => {
       console.log('Data sent successfully');
     }).catch((error) => {
       console.log('Received error: ', error);
     })
-    // socket.emit(`d ${this.state.contact} ${(event.clientX - rect.x) * 4 - 1} ${(event.clientY - rect.Y) * 4 - 1}`);
   }
 
   // <img src={this.state.img} alt={"android"} height={this.state.height} width={this.state.width} />
@@ -85,11 +102,14 @@ class App extends Component {
           onMessage={this.handleData}
           onOpen={this.handleOpen} />
         <div id="container">
-          <h1>Ministf</h1>
-          <canvas ref="canvas"
-            width={this.state.width}
-            height={this.state.height}
-            onMouseDown={this.handleMouseDown} ></canvas>
+          <h1 id="header">Ministf</h1>
+          <div id="phone">
+            <canvas ref="canvas"
+              width={this.state.width}
+              height={this.state.height}
+              onMouseDown={this.handleMouseDown}
+              onMouseUp={this.handleMouseUp} ></canvas>
+          </div>
         </div>
       </div>
     );

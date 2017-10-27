@@ -18,14 +18,23 @@
 }
 
 canvas {
-  border: 1px solid red;
   background-color: black;
-  /*transform: scale(0.25);*/
+  /*margin: auto;*/
 }
 
 #container {
   position: absolute;
-  top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
+  margin: 5px;
+}
+
+#header {
+  margin: auto;
+}
+
+#phone {
+  margin: 10px;
+  padding: 5px;
+  box-shadow: 0px 5px 15px #888888;
 }

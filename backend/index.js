@@ -6,13 +6,13 @@ var WebSocketServer = require('ws').Server
   , app = express()
   , cors = require('cors')
   , bodyParser = require('body-parser')
+  , exec = require('child_process').exec;
 
 var PORT = process.env.PORT || 9002
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
-// app.listen(PORT);
 app.use(express.static(path.join(__dirname, '../frontend/build')))
 
 var server = http.createServer(app)
@@ -194,15 +194,35 @@ wss.on('connection', function(ws) {
     stream.end()
   })
 
+  var view_out = false;
+
   app.post('/',function(req,res){
       // console.log(req.body);
-      const payload = `d 0 ${req.body.x} ${req.body.y} 50\n`;
-      console.log(payload);
-      stream_minitouch.write(payload);
-      stream_minitouch.write('c\n');
-      stream_minitouch.write('u 0\n');
-      stream_minitouch.write('c\n');
-      return res.sendStatus(200);
+      var propagate = false;
+
+      if (view_out == true) {
+        var child = exec("adb shell uiautomator dump /dev/tty", function(error, stdout, stderr) {
+          console.log(`stdout: ${stdout}`);
+          propagate = true;
+          // console.log(`stderr: ${stderr}`);
+          if (error != null) {
+            console.log(`exec error: ${error}`);
+          }
+        })
+      }
+
+      if (view_out == false || propagate == true) {
+        const down = `d 0 ${req.body.x1} ${req.body.y2} 50\n`;
+        const up = `m 0 ${req.body.x2} ${req.body.y2} 50\n`;
+        console.log(`${down}${up}`);
+        stream_minitouch.write(down);
+        stream_minitouch.write('c\n');
+        stream_minitouch.write(up);
+        stream_minitouch.write('c\n');
+        stream_minitouch.write('u 0\n');
+        stream_minitouch.write('c\n');
+        return res.sendStatus(200);
+      }
   })
 })
 
