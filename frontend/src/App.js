@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
-import Websocket from 'react-websocket';
+import ReactWebsocket from 'react-websocket';
+import axios from 'axios';
 import './App.css';
+
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      endpoint: "http://localhost:1111",
+      contact: 0,
       width: 360,
       height: 640
     }
@@ -56,8 +60,19 @@ class App extends Component {
   }
 
   handleMouseDown(event) {
-    var rect = this.refs.canvas.getBoundingClientRect()
+    const rect = this.refs.canvas.getBoundingClientRect()
+    // const { socket } = this.state;
+
     console.log((event.clientX - rect.x) + ", " + (event.clientY - rect.y));
+    axios.post("http://localhost:9002/", {
+      x: (event.clientX - rect.x) * 4 - 1,
+      y: (event.clientY - rect.y) * 4 - 1
+    }).then((response) => {
+      console.log('Data sent successfully');
+    }).catch((error) => {
+      console.log('Received error: ', error);
+    })
+    // socket.emit(`d ${this.state.contact} ${(event.clientX - rect.x) * 4 - 1} ${(event.clientY - rect.Y) * 4 - 1}`);
   }
 
   // <img src={this.state.img} alt={"android"} height={this.state.height} width={this.state.width} />
@@ -65,7 +80,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <Websocket url='ws://localhost:9002/minicap'
+        <ReactWebsocket url='ws://localhost:9002'
           onClose={this.handleClose}
           onMessage={this.handleData}
           onOpen={this.handleOpen} />

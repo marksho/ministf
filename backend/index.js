@@ -4,9 +4,15 @@ var WebSocketServer = require('ws').Server
   , path = require('path')
   , net = require('net')
   , app = express()
+  , cors = require('cors')
+  , bodyParser = require('body-parser')
 
 var PORT = process.env.PORT || 9002
 
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors());
+// app.listen(PORT);
 app.use(express.static(path.join(__dirname, '../frontend/build')))
 
 var server = http.createServer(app)
@@ -19,8 +25,17 @@ wss.on('connection', function(ws) {
     port: 1717
   })
 
+  var stream_minitouch = net.connect({
+    port: 1111
+  })
+
   stream.on('error', function() {
     console.error('Be sure to run `adb forward tcp:1717 localabstract:minicap`')
+    process.exit(1)
+  })
+
+  stream_minitouch.on('error', function() {
+    console.error('Be sure to run `adb forward tcp:1111 localabstract:minitouch`')
     process.exit(1)
   })
 
@@ -41,9 +56,16 @@ wss.on('connection', function(ws) {
   , quirks: 0
   }
 
+  var debug = false;
+
+  function tryTouch() {
+    console.log(`minitouch sent: ${stream_minitouch.read()}`);
+  }
+
   function tryRead() {
     for (var chunk; (chunk = stream.read());) {
-      console.info('chunk(length=%d)', chunk.length)
+      if (debug == true)
+        console.info('chunk(length=%d)', chunk.length)
       for (var cursor = 0, len = chunk.length; cursor < len;) {
         if (readBannerBytes < bannerLength) {
           switch (readBannerBytes) {
@@ -109,18 +131,21 @@ wss.on('connection', function(ws) {
           readBannerBytes += 1
 
           if (readBannerBytes === bannerLength) {
-            console.log('banner', banner)
+            if (debug == true)
+              console.log('banner', banner)
           }
         }
         else if (readFrameBytes < 4) {
           frameBodyLength += (chunk[cursor] << (readFrameBytes * 8)) >>> 0
           cursor += 1
           readFrameBytes += 1
-          console.info('headerbyte%d(val=%d)', readFrameBytes, frameBodyLength)
+          if (debug == true)
+            console.info('headerbyte%d(val=%d)', readFrameBytes, frameBodyLength)
         }
         else {
           if (len - cursor >= frameBodyLength) {
-            console.info('bodyfin(len=%d,cursor=%d)', frameBodyLength, cursor)
+            if (debug == true)
+              console.info('bodyfin(len=%d,cursor=%d)', frameBodyLength, cursor)
 
             frameBody = Buffer.concat([
               frameBody
@@ -143,7 +168,8 @@ wss.on('connection', function(ws) {
             frameBody = new Buffer(0)
           }
           else {
-            console.info('body(len=%d)', len - cursor)
+            if (debug == true)
+              console.info('body(len=%d)', len - cursor)
 
             frameBody = Buffer.concat([
               frameBody
@@ -161,10 +187,17 @@ wss.on('connection', function(ws) {
 
   stream.on('readable', tryRead)
 
+  stream_minitouch.on('readable', tryTouch)
+
   ws.on('close', function() {
     console.info('Lost a client')
     stream.end()
   })
+})
+
+app.post('/',function(req,res){
+    console.log(req.body);
+    return res.sendStatus(200);
 })
 
 server.listen(PORT)
