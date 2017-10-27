@@ -29,6 +29,10 @@ wss.on('connection', function(ws) {
     port: 1111
   })
 
+  // var stream_views = net.connect({
+  //   port: 1699
+  // })
+
   stream.on('error', function() {
     console.error('Be sure to run `adb forward tcp:1717 localabstract:minicap`')
     process.exit(1)
@@ -212,14 +216,11 @@ wss.on('connection', function(ws) {
       }
 
       if (view_out == false || propagate == true) {
-        const down = `d 0 ${req.body.x1} ${req.body.y2} 50\n`;
-        const up = `m 0 ${req.body.x2} ${req.body.y2} 50\n`;
-        console.log(`${down}${up}`);
-        stream_minitouch.write(down);
-        stream_minitouch.write('c\n');
-        stream_minitouch.write(up);
-        stream_minitouch.write('c\n');
-        stream_minitouch.write('u 0\n');
+        const data = req.body.data;
+        // const down = `d 0 ${req.body.x1} ${req.body.y2} 50\n`;
+        // const up = `m 0 ${req.body.x2} ${req.body.y2} 50\n`;
+        console.log(`${data}`);
+        stream_minitouch.write(data);
         stream_minitouch.write('c\n');
         return res.sendStatus(200);
       }
