@@ -1,16 +1,1 @@
-/minicap/*.tgz
-/minicap/.env
-/minicap/gdb.setup
-/minicap/libs/
-/minicap/libs/
-/minicap/obj/
-/minicap/prebuilt/
-/minicap/temp/
-
-/minitouch/*.tgz
-/minitouch/.env
-/minitouch/libs/
-/minitouch/libs/
-/minitouch/obj/
-/minitouch/prebuilt/
-/minitouch/temp/
+node_modules
