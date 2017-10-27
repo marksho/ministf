@@ -193,11 +193,17 @@ wss.on('connection', function(ws) {
     console.info('Lost a client')
     stream.end()
   })
-})
 
-app.post('/',function(req,res){
-    console.log(req.body);
-    return res.sendStatus(200);
+  app.post('/',function(req,res){
+      // console.log(req.body);
+      const payload = `d 0 ${req.body.x} ${req.body.y} 50\n`;
+      console.log(payload);
+      stream_minitouch.write(payload);
+      stream_minitouch.write('c\n');
+      stream_minitouch.write('u 0\n');
+      stream_minitouch.write('c\n');
+      return res.sendStatus(200);
+  })
 })
 
 server.listen(PORT)
