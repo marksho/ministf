@@ -17,13 +17,14 @@ here and using minitouch, propagated to device
 
 ### Todo
 
-1) Cap framerate for minicap to 10fps
-2) Fix view hierarchy
+- [x] Add mouse drag events
+- [ ] Cap framerate for minicap to 10fps
+- [ ] Fix view hierarchy
     - adb shell dumpsys activity start-view-server
-    - adb forward tcp:<port> tcp:1699
-    - nc localhost <port>
-3) Keyboard events
-4) Easier startup
+    - adb forward tcp:\<port\> tcp:1699
+    - nc localhost \<port\>
+- [ ] Keyboard events
+- [ ] Easier startup
 
 ### Resources
 - [minitouch](https://github.com/openstf/minitouch)
