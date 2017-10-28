@@ -15,6 +15,16 @@ Backend
 here and using minitouch, propagated to device
 4) either before, or after the event, the view hierarchy is captured
 
+### Todo
+
+1) Cap framerate for minicap to 10fps
+2) Fix view hierarchy
+    - adb shell dumpsys activity start-view-server
+    - adb forward tcp:<port> tcp:1699
+    - nc localhost <port>
+3) Keyboard events
+4) Easier startup
+
 ### Resources
 - [minitouch](https://github.com/openstf/minitouch)
 - [minicap](https://github.com/openstf/minicap)

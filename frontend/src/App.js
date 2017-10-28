@@ -12,7 +12,8 @@ class App extends Component {
       width: 360,
       height: 640,
       x: 1,
-      y: 1
+      y: 1,
+      update: 1
     }
     // 1440 x 2560 - 360 x 640
 
@@ -21,6 +22,8 @@ class App extends Component {
     this.handleOpen = this.handleOpen.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleMouseDrag = this.handleMouseDrag.bind(this);
+    this.setUpdate = this.setUpdate.bind(this);
   }
 
   handleOpen() {
@@ -66,25 +69,11 @@ class App extends Component {
 
     const mouseX = event.clientX - rect.x;
     const mouseY = event.clientY - rect.y;
+    const output = `d ${this.state.contact} ${mouseX * 4 - 1} ${mouseY * 4 - 1} ${50}\n`;
     console.log(`mouseDown: ${mouseX}, ${mouseY}`);
-    this.setState({
-      x: mouseX,
-      y: mouseY
-    })
-  }
-
-  handleMouseUp(event) {
-    const rect = this.refs.canvas.getBoundingClientRect()
-
-    const mouseX = event.clientX - rect.x;
-    const mouseY = event.clientY - rect.y;
-    console.log(`mouseUp: ${mouseX}, ${mouseY}`);
-
+    
     axios.post("http://localhost:9002/", {
-      x1: this.state.x * 4 - 1,
-      y1: this.state.y * 4 - 1,
-      x2: mouseX * 4 - 1,
-      y2: mouseY * 4 - 1
+      data: output
     }).then((response) => {
       console.log('Data sent successfully');
     }).catch((error) => {
@@ -92,7 +81,53 @@ class App extends Component {
     })
   }
 
-  // <img src={this.state.img} alt={"android"} height={this.state.height} width={this.state.width} />
+  handleMouseUp(event) {
+    // const rect = this.refs.canvas.getBoundingClientRect()
+
+    // const mouseX = event.clientX - rect.x;
+    // const mouseY = event.clientY - rect.y;
+    // const output
+    // console.log(`mouseUp: ${mouseX}, ${mouseY}`);
+    const output = `u ${this.state.contact}\n`;
+
+    axios.post("http://localhost:9002/", {
+      data: output
+    }).then((response) => {
+      console.log('Data sent successfully');
+    }).catch((error) => {
+      console.log('Received error: ', error);
+    })
+  }
+
+  handleMouseDrag(event) {
+    const rect = this.refs.canvas.getBoundingClientRect()
+
+    const mouseX = event.clientX - rect.x;
+    const mouseY = event.clientY - rect.y;
+    const output = `m ${this.state.contact} ${mouseX * 4 - 1} ${mouseY * 4 - 1} ${50}\n`;
+    if (this.state.update === 1 && mouseX > 0 && mouseX <= this.state.width && mouseY > 0 && mouseY <= this.state.height) {
+      console.log(`drag: ${mouseX}, ${mouseY}`);
+      this.setState({
+        update: 0
+      })
+      setTimeout(this.setUpdate, 50);
+
+      axios.post("http://localhost:9002/", {
+        data: output
+      }).then((response) => {
+        console.log('Data sent successfully');
+      }).catch((error) => {
+        console.log('Received error: ', error);
+      })
+    }
+  }
+
+  setUpdate() {
+    // console.log("hi im updating");
+    this.setState({
+      update: 1
+    });
+  }
 
   render() {
     return (
@@ -108,7 +143,10 @@ class App extends Component {
               width={this.state.width}
               height={this.state.height}
               onMouseDown={this.handleMouseDown}
-              onMouseUp={this.handleMouseUp} ></canvas>
+              onMouseUp={this.handleMouseUp}
+              onDrag={this.handleMouseDrag}
+              onDragEnd={this.handleMouseUp}
+              draggable={true} ></canvas>
           </div>
         </div>
       </div>
