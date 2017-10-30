@@ -66,7 +66,7 @@ wss.on('connection', function(ws) {
     console.log(`minitouch sent: ${stream_minitouch.read()}`);
   }
 
-  function tryRead() {
+  function tryRead() {;
     for (var chunk; (chunk = stream.read());) {
       if (debug == true)
         console.info('chunk(length=%d)', chunk.length)
@@ -219,10 +219,22 @@ wss.on('connection', function(ws) {
         const data = req.body.data;
         // const down = `d 0 ${req.body.x1} ${req.body.y2} 50\n`;
         // const up = `m 0 ${req.body.x2} ${req.body.y2} 50\n`;
-        console.log(`${data}`);
-        stream_minitouch.write(data);
-        stream_minitouch.write('c\n');
-        return res.sendStatus(200);
+        if (req.body.type == "mouse") {
+          console.log(`${data}`);
+          stream_minitouch.write(data);
+          stream_minitouch.write('c\n');
+          return res.sendStatus(200);
+        } else if (req.body.type == "key") {
+          console.log(`${data}`);
+          exec(data, function(error, stdout, stderr) {
+            if (error != null) {
+              consol.log(`exec error: ${error}`);
+            }
+          })
+          return res.sendStatus(200);
+        } else {
+          console.log(`unknown data type: ${req.body.type}`);
+        }
       }
   })
 })

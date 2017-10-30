@@ -23,7 +23,7 @@ here and using minitouch, propagated to device
     - adb shell dumpsys activity start-view-server
     - adb forward tcp:\<port\> tcp:1699
     - nc localhost \<port\>
-- [ ] Keyboard events
+- [x] Keyboard events
 - [ ] Easier startup
 
 ### Resources

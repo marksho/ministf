@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactWebsocket from 'react-websocket';
 import axios from 'axios';
+import keyMap from './keyMap.js'
 import './App.css';
 
 
@@ -23,7 +24,25 @@ class App extends Component {
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleMouseDrag = this.handleMouseDrag.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
     this.setUpdate = this.setUpdate.bind(this);
+  }
+
+  componentWillMount() {
+    window.addEventListener("keydown", function(e) {
+      const keyCode = e.code;
+      console.log(keyMap[keyCode]);
+      const output = `adb shell input keyevent ${keyMap[keyCode]}`
+      axios.post("http://localhost:9002/", {
+        type: "key",
+        data: output
+      }).then((response) => {
+        console.log('Data sent successfully');
+      }).catch((error) => {
+        console.log('Received error: ', error);
+      })
+      e.preventDefault()
+    })
   }
 
   handleOpen() {
@@ -73,6 +92,7 @@ class App extends Component {
     console.log(`mouseDown: ${mouseX}, ${mouseY}`);
     
     axios.post("http://localhost:9002/", {
+      type: "mouse",
       data: output
     }).then((response) => {
       console.log('Data sent successfully');
@@ -91,6 +111,7 @@ class App extends Component {
     const output = `u ${this.state.contact}\n`;
 
     axios.post("http://localhost:9002/", {
+      type: "mouse",
       data: output
     }).then((response) => {
       console.log('Data sent successfully');
@@ -113,6 +134,7 @@ class App extends Component {
       setTimeout(this.setUpdate, 50);
 
       axios.post("http://localhost:9002/", {
+        type: "mouse",
         data: output
       }).then((response) => {
         console.log('Data sent successfully');
@@ -120,6 +142,13 @@ class App extends Component {
         console.log('Received error: ', error);
       })
     }
+  }
+
+  handleKeyPress(event) {
+    var keynum = event.keyCode;
+    console.log(event)
+
+    console.log(keynum);
   }
 
   setUpdate() {
