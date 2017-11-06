@@ -15,11 +15,28 @@ Backend
 here and using minitouch, propagated to device
 4) either before, or after the event, the view hierarchy is captured
 
+### Running
+
+- View hierarchy
+    - adb forward tcp:1699 tcp:1699
+    - adb shell dumpsys activity start-view-server
+        - d
+- Minicap
+    - adb forward tcp:1717 localabstract:minicap
+    - ./run.sh -P 1440x2560@360x640/0
+- Minitouch
+    - adb forward tcp:1111 localabstract:minitouch
+    - adb shell /data/local/tmp/minitouch
+- frontend
+    - npm start
+- backend
+    - npm start
+
 ### Todo
 
 - [x] Add mouse drag events
-- [ ] Cap framerate for minicap to 10fps
-- [ ] Fix view hierarchy
+- [x] Cap framerate for minicap to 10fps
+- [x] Fix view hierarchy
     - adb shell dumpsys activity start-view-server
     - adb forward tcp:\<port\> tcp:1699
     - nc localhost \<port\>

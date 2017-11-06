@@ -54,7 +54,14 @@ class App extends Component {
   }
 
   handleData(message) {
+    // const obj = JSON.parse(data);
+    // console.log(obj);
+    // const message = obj.data
+    // const message = "temp";
+
     // console.log(message)
+    // const display = true;
+    // if (display == true) {
     let g = this.refs.canvas.getContext('2d');
     let blob = new Blob([message], {type: 'image/jpeg'});
     let URL = window.URL || window.webkitURL;
@@ -81,6 +88,7 @@ class App extends Component {
     this.setState({
       img: img
     })
+    // }
   }
 
   handleMouseDown(event) {

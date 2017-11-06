@@ -6,7 +6,9 @@ var WebSocketServer = require('ws').Server
   , app = express()
   , cors = require('cors')
   , bodyParser = require('body-parser')
-  , exec = require('child_process').exec;
+  , exec = require('child_process').exec
+  , fs = require('fs')
+  , d = new Date();
 
 var PORT = process.env.PORT || 9002
 
@@ -29,9 +31,9 @@ wss.on('connection', function(ws) {
     port: 1111
   })
 
-  // var stream_views = net.connect({
-  //   port: 1699
-  // })
+  var stream_views = net.connect({
+    port: 1699
+  })
 
   stream.on('error', function() {
     console.error('Be sure to run `adb forward tcp:1717 localabstract:minicap`')
@@ -40,6 +42,11 @@ wss.on('connection', function(ws) {
 
   stream_minitouch.on('error', function() {
     console.error('Be sure to run `adb forward tcp:1111 localabstract:minitouch`')
+    process.exit(1)
+  })
+
+  stream_views.on('error', function() {
+    console.error('Be sure to run `adb forward tcp:1699 tcp:1699`')
     process.exit(1)
   })
 
@@ -163,6 +170,12 @@ wss.on('connection', function(ws) {
               process.exit(1)
             }
 
+            // setTimeout(function timeout() {
+            //   ws.send(frameBody, {
+            //     binary: true
+            //   })
+            // }, 100);
+
             ws.send(frameBody, {
               binary: true
             })
@@ -189,53 +202,94 @@ wss.on('connection', function(ws) {
     }
   }
 
-  stream.on('readable', tryRead)
+  let touch_events = [];
+  let file_no = 0;
+  let write_file = 1;
+
+  function tryViews() {
+    // console.log(`view hierarchy: ${stream_views.read()}`);
+    if (write_file == 1) {
+      let view_hierarchy = stream_views.read();
+      let time = d.getTime();
+      // fs.writeFile(`../output/view${time}.txt`);
+      while (view_hierarchy) {
+        fs.appendFile(`../output/view${time}.txt`, `${view_hierarchy}`, function(err) {
+          if (err) {
+            return console.log(err)
+          }
+        });
+        view_hierarchy = stream_views.read();
+      }
+      // const time = d.getTime();
+      // for (let view_hierarchy; (view_hierarchy = stream_views.read());) {
+      //   console.log(view_hierarchy);
+      //   fs.writeFile(`../output/view${time}.txt`, `${view_hierarchy}`, function(err) {
+      //     if (err) {
+      //       return console.log(err)
+      //     }
+      //   });
+      // }
+      // console.log(`${view_hierarchy}`);
+      // console.log("hierarchy saved");
+      file_no += 1;
+      // write_file = 0;
+      // setTimeout(function timout() {
+      //   write_file = 1;
+      // }, 200)
+    }
+    // console.log("hi");
+
+    while (touch_events.length > 0) {
+      let data = touch_events.shift();
+      console.log(`${data}`);
+      stream_minitouch.write(data);
+      stream_minitouch.write('c\n');
+    }
+    // propagate = true
+  }
+
+  // cap to 10fps
+  setTimeout(function timeout() {
+    stream.on('readable', tryRead)
+  }, 100);
+  // stream.on('readable', tryRead)
 
   stream_minitouch.on('readable', tryTouch)
+
+  stream_views.on('readable', tryViews)
 
   ws.on('close', function() {
     console.info('Lost a client')
     stream.end()
+    stream_minitouch.end()
+    stream_views.end()
   })
 
-  var view_out = false;
-
   app.post('/',function(req,res){
-      // console.log(req.body);
-      var propagate = false;
-
-      if (view_out == true) {
-        var child = exec("adb shell uiautomator dump /dev/tty", function(error, stdout, stderr) {
-          console.log(`stdout: ${stdout}`);
-          propagate = true;
-          // console.log(`stderr: ${stderr}`);
-          if (error != null) {
-            console.log(`exec error: ${error}`);
-          }
-        })
-      }
-
-      if (view_out == false || propagate == true) {
         const data = req.body.data;
-        // const down = `d 0 ${req.body.x1} ${req.body.y2} 50\n`;
-        // const up = `m 0 ${req.body.x2} ${req.body.y2} 50\n`;
         if (req.body.type == "mouse") {
-          console.log(`${data}`);
-          stream_minitouch.write(data);
-          stream_minitouch.write('c\n');
+          // console.log(data[0])
+          if (data[0] == 'd') {
+            console.log('stream_views')
+            stream_views.write("d\n")
+          }
+          console.log(`received: ${data}`);
+          // stream_minitouch.write(data);
+          // stream_minitouch.write('c\n');
+          touch_events.push(data);
           return res.sendStatus(200);
         } else if (req.body.type == "key") {
           console.log(`${data}`);
           exec(data, function(error, stdout, stderr) {
             if (error != null) {
-              consol.log(`exec error: ${error}`);
+              console.log(`exec error: ${error}`);
             }
           })
           return res.sendStatus(200);
         } else {
           console.log(`unknown data type: ${req.body.type}`);
         }
-      }
+      // }
   })
 })
 
