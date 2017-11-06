@@ -205,47 +205,74 @@ wss.on('connection', function(ws) {
   let touch_events = [];
   let file_no = 0;
   let write_file = 1;
+  // let time = d.getTime();
 
   function tryViews() {
     // console.log(`view hierarchy: ${stream_views.read()}`);
     if (write_file == 1) {
-      let view_hierarchy = stream_views.read();
-      let time = d.getTime();
-      // fs.writeFile(`../output/view${time}.txt`);
-      while (view_hierarchy) {
-        fs.appendFile(`../output/view${time}.txt`, `${view_hierarchy}`, function(err) {
-          if (err) {
-            return console.log(err)
-          }
-        });
-        view_hierarchy = stream_views.read();
-      }
-      // const time = d.getTime();
-      // for (let view_hierarchy; (view_hierarchy = stream_views.read());) {
-      //   console.log(view_hierarchy);
-      //   fs.writeFile(`../output/view${time}.txt`, `${view_hierarchy}`, function(err) {
+      let view_hierarchy = stream_views.read() + "";
+      // let time = d.getTime();
+      // if (view_hierarchy != null && view_hierarchy.includes("RICO_JSON_END")) {
+      //   d = new Date();
+      //   time = d.getTime();
+      // }
+      // // console.log(d.getTime());
+      // // fs.writeFile(`../output/view${time}.txt`);
+      // while (view_hierarchy) {
+      //   time = d.getTime();
+      //   fs.appendFile(`../output/view${time}.txt`, `${view_hierarchy}`, function(err) {
       //     if (err) {
       //       return console.log(err)
       //     }
       //   });
+      //   view_hierarchy = stream_views.read();
+      //   if (view_hierarchy != null && view_hierarchy.includes("RICO_JSON_END")) {
+      //     d = new Date();
+      //     time = d.getTime();
+      //   }
       // }
-      // console.log(`${view_hierarchy}`);
-      // console.log("hierarchy saved");
-      file_no += 1;
-      // write_file = 0;
-      // setTimeout(function timout() {
-      //   write_file = 1;
-      // }, 200)
-    }
-    // console.log("hi");
+      let arr = [];
+      let times = [];
+      if (view_hierarchy) {
+        const lines = view_hierarchy.split("\n");
+        let time = d.getTime();
+        let cur_line = "";
 
+        for (let i = 0; i < lines.length; i++) {
+          cur_line += lines[i]+"\n";
+          
+          if (lines[i].includes("RICO_JSON_END")) {
+            d = new Date();
+            time = d.getTime();
+            times.push(time)
+            arr.push(cur_line);
+            cur_line = "";
+          }
+        }
+
+        for (let i = 0; i < arr.length; i++) {
+          fs.appendFile(`../output/view${file_no}.txt`, `${arr[i]}`, function(err) {
+            if (err) {
+              return console.log(err)
+            }
+          });
+          file_no += 1;
+        }
+        if (cur_line != "") {
+          fs.appendFile(`../output/view${file_no}.txt`, `${cur_line}`, function(err) {
+            if (err) {
+              return console.log(err)
+            }
+          });
+        }
+      }
+    }
     while (touch_events.length > 0) {
       let data = touch_events.shift();
-      console.log(`${data}`);
+      console.log(`writing: ${data}`);
       stream_minitouch.write(data);
       stream_minitouch.write('c\n');
     }
-    // propagate = true
   }
 
   // cap to 10fps
